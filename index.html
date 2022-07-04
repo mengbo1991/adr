@@ -16,7 +16,11 @@
 	</head>
 	<body>
 		<div id="app">
-			<img src="https://tiantaishan-adr-banner.oss-cn-hangzhou.aliyuncs.com/banner02.jpg" width="100%" alt="banner" @click="tel"/>
+			<img src="img/banner02.jpg" width="100%" alt="" usemap="#callMap" @load="coordsSet();" />
+			<map name="callMap">
+				<area shape="rect" :coords="telCoords" @click="tel">
+				<area shape="rect" :coords="phoneCoords" @click="phone">
+			</map>
 			<el-form ref="elForm" :model="formData" :rules="rules" size="medium" label-width="100px" v-if="elFormShow"
 				label-position="top">
 				<el-form-item label="姓名" prop="name">
@@ -62,9 +66,9 @@
 			</el-form>
 			<el-row v-if="!elFormShow">
 				<el-col :sm="12" :lg="6">
-			    <el-result icon="success" title="提交成功" sub-title="感谢您的反馈">
-			    </el-result>
-			  </el-col>
+					<el-result icon="success" title="提交成功" sub-title="感谢您的反馈">
+					</el-result>
+				</el-col>
 			</el-row>
 			<el-dialog title="提示" :visible.sync="dialogVisible" width="100%">
 				<span>{{errorMsg}}</span>
@@ -79,9 +83,11 @@
 			el: '#app',
 			data() {
 				return {
-					elFormShow : true,
-					submitButtonFlag : true,
+					elFormShow: true,
+					submitButtonFlag: true,
 					dialogVisible: false,
+					telCoords: '78,107,294,126',
+					phoneCoords: '59,130,317,147',
 					errorMsg: "",
 					formData: {
 						name: '',
@@ -156,27 +162,59 @@
 						axios.post("http://39.98.129.8:8090/system/collect/add",
 							this.formData
 						).then(response => {
-							// 返回结果开始下一步处理
-							loading.close();
-							console.log(response)
-							if(response.data.code == 0){
-								this.elFormShow = false
-								this.submitButtonFlag = false
-							}else{
-								this.errorMsg = response.data.msg;
+								// 返回结果开始下一步处理
+								loading.close();
+								console.log(response)
+								if (response.data.code == 0) {
+									this.elFormShow = false
+									this.submitButtonFlag = false
+								} else {
+									this.errorMsg = response.data.msg;
+									this.dialogVisible = true;
+								}
+							},
+							error => {
+								loading.close();
+								this.errorMsg = '提交失败，服务器异常！';
 								this.dialogVisible = true;
-							}
-						},
-						error => {
-							loading.close();
-							this.errorMsg = '提交失败，服务器异常！';
-							this.dialogVisible = true;
-						})
+							})
 					})
 				},
-				tel (){
+				tel() {
 					window.location.href = "tel:4006008511";
 				},
+				phone() {
+					window.location.href = "tel:13550382576";
+				},
+				coordsSet() {
+					var pageWidth = document.body.clientWidth;//获取页面宽度
+					// 计算位置
+					var telEach = this.telCoords.split(",");
+					for (var i = 0; i < telEach.length; i++) {
+						telEach[i] = Math.round(parseInt(telEach[i]) * pageWidth / 374).toString();
+					}
+					var telNewPosition = "";
+					for (var i = 0; i < telEach.length; i++) {
+						telNewPosition += telEach[i];
+						if (i < telEach.length - 1) {
+							telNewPosition += ",";
+						}
+					}
+					this.telCoords = telNewPosition;
+					
+					var phoneEach = this.phoneCoords.split(",");
+					for (var i = 0; i < phoneEach.length; i++) {
+						phoneEach[i] = Math.round(parseInt(phoneEach[i]) * pageWidth / 374).toString();
+					}
+					var phoneNewPosition = "";
+					for (var i = 0; i < phoneEach.length; i++) {
+						phoneNewPosition += phoneEach[i];
+						if (i < phoneEach.length - 1) {
+							phoneNewPosition += ",";
+						}
+					}
+					this.phoneCoords = phoneNewPosition;
+				}
 			}
 		})
 	</script>
