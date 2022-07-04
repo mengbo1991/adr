@@ -16,15 +16,7 @@
 	</head>
 	<body>
 		<div id="app">
-			<el-row :gutter="12">
-			  <el-col :span="24">
-			    <el-card shadow="never">
-			      	<p><b>成都天台山制药有限公司药物警戒热线电话</b></p>
-			      	<p><a href="tel:4006008511">4006008511</a>转4（座机，仅工作日）</p>
-			      	<p><a href="tel:13550382576">13550382576</a>（非工作日的紧急联络方式）</p>
-			    </el-card>
-			  </el-col>
-			</el-row>
+			<img src="img/banner02.jpg" width="100%" alt="banner" @click="tel"/>
 			<el-form ref="elForm" :model="formData" :rules="rules" size="medium" label-width="100px" v-if="elFormShow"
 				label-position="top">
 				<el-form-item label="姓名" prop="name">
@@ -181,6 +173,9 @@
 							this.dialogVisible = true;
 						})
 					})
+				},
+				tel (){
+					window.location.href = "tel:4006008511";
 				},
 			}
 		})
