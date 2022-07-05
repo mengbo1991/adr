@@ -16,31 +16,36 @@
 	</head>
 	<body>
 		<div id="app">
-			<img src="https://tiantaishan-adr-banner.oss-cn-hangzhou.aliyuncs.com/banner02.jpg" width="100%" alt="" usemap="#callMap" @load="coordsSet();" />
+			<img src="https://tiantaishan-adr-banner.oss-cn-hangzhou.aliyuncs.com/banner03.jpg" width="100%" alt="" usemap="#callMap" @load="coordsSet();" />
 			<map name="callMap">
-				<area shape="rect" :coords="telCoords" @click="tel">
-				<area shape="rect" :coords="phoneCoords" @click="phone">
+				<area shape="rect" :coords="telCoords" @click="telCall">
+				<area shape="rect" :coords="phoneCoords" @click="phoneCall">
 			</map>
 			<el-form ref="elForm" :model="formData" :rules="rules" size="medium" label-width="100px" v-if="elFormShow"
 				label-position="top">
-				<el-form-item label="姓名" prop="name">
-					<el-input v-model="formData.name" placeholder="请输入姓名" show-word-limit clearable
+				<el-form-item label="上报人姓名" prop="name">
+					<el-input v-model="formData.name" placeholder="请输入上报人姓名" show-word-limit clearable
 						:style="{width: '100%'}"></el-input>
 				</el-form-item>
-				<el-form-item label="手机号" prop="phone">
-					<el-input v-model="formData.phone" placeholder="请输入手机号" :maxlength="11" clearable
+				<el-form-item label="上报人手机号" prop="phone">
+					<el-input v-model="formData.phone" placeholder="请输入上报人手机号" :maxlength="11" clearable
 						:style="{width: '100%'}">
 					</el-input>
 				</el-form-item>
-				<el-form-item label="性别" prop="gender">
+				<el-form-item label="患者姓名" prop="patientName">
+					<el-input v-model="formData.patientName" placeholder="请输入患者姓名" show-word-limit clearable
+						:style="{width: '100%'}"></el-input>
+				</el-form-item>
+				<el-form-item label="患者性别" prop="gender">
 					<el-radio-group v-model="formData.gender" size="medium">
 						<el-radio v-for="(item, index) in genderOptions" :key="index" :label="item.value"
 							:disabled="item.disabled">{{item.label}}</el-radio>
 					</el-radio-group>
 				</el-form-item>
-				<el-form-item label="药品批准文号" prop="approvalNo">
-					<el-input v-model="formData.approvalNo" placeholder="请输入药品批准文号" clearable :style="{width: '100%'}">
-					</el-input>
+				<el-form-item label="药品名称" prop="productName">
+					<el-autocomplete v-model="formData.productName" placeholder="请输入药品名称" clearable
+						:fetch-suggestions="querySearch" :trigger-on-focus="false" :style="{width: '100%'}">
+						</el-input>
 				</el-form-item>
 				<el-form-item label="药品批号" prop="batchNo">
 					<el-input v-model="formData.batchNo" placeholder="请输入药品批号" clearable :style="{width: '100%'}">
@@ -83,41 +88,62 @@
 			el: '#app',
 			data() {
 				return {
+					// 控制表单和最后提交成功的显示
 					elFormShow: true,
+					// 提交按钮
 					submitButtonFlag: true,
+					// 弹出层
 					dialogVisible: false,
-					telCoords: '78,107,294,126',
-					phoneCoords: '59,130,317,147',
+					// 400电话
+					telVal: '4006008511',
+					// 初始电话坐标
+					telCoords: '66,100,171,118',
+					// 手机号
+					phoneVal: '13550382576',
+					// 初始手机坐标
+					phoneCoords: '46,122,160,141',
+					// API地址
+					apiUrl: 'http://39.98.129.8:8090/system/collect/add',
+					// 错误信息
 					errorMsg: "",
+					// 表单内容
 					formData: {
 						name: '',
+						patientName: '',
 						phone: '',
 						gender: '',
 						approvalNo: '',
+						productName: '',
 						batchNo: '',
 						description: '',
 						medication: '',
 						returnVisit: '',
 					},
+					// 填写规则
 					rules: {
 						name: [{
 							required: true,
-							message: '请输入姓名',
+							message: '请输入上报人姓名',
 							trigger: 'blur'
 						}],
 						phone: [{
 							required: true,
-							message: '请输入手机号',
+							message: '请输入上报人手机号',
 							trigger: 'blur'
 						}, {
 							pattern: /^1(3|4|5|7|8|9)\d{9}$/,
 							message: '手机号格式错误',
 							trigger: 'blur'
 						}],
-						gender: [],
-						approvalNo: [{
+						patientName: [{
 							required: true,
-							message: '请输入药品批准文号',
+							message: '请输入患者姓名',
+							trigger: 'blur'
+						}],
+						gender: [],
+						productName: [{
+							required: true,
+							message: '请输入药品名称',
 							trigger: 'blur'
 						}],
 						batchNo: [],
@@ -150,8 +176,10 @@
 				}
 			},
 			methods: {
+				// 提交事件
 				submitForm() {
 					this.$refs['elForm'].validate(valid => {
+						// 验证失败，不进行提交
 						if (!valid) return;
 						const loading = this.$loading({
 							lock: true,
@@ -159,7 +187,7 @@
 							spinner: 'el-icon-loading',
 							background: 'rgba(0, 0, 0, 0.7)'
 						});
-						axios.post("http://39.98.129.8:8090/system/collect/add",
+						axios.post(this.apiUrl,
 							this.formData
 						).then(response => {
 								// 返回结果开始下一步处理
@@ -180,41 +208,35 @@
 							})
 					})
 				},
-				tel() {
-					window.location.href = "tel:4006008511";
+				// 电话区域点击事件
+				telCall() {
+					window.location.href = "tel:" + this.telVal;
 				},
-				phone() {
-					window.location.href = "tel:13550382576";
+				// 手机号码区域点击事件
+				phoneCall() {
+					window.location.href = "tel:" + this.phoneVal;
 				},
+				// 坐标设置
 				coordsSet() {
-					var pageWidth = document.body.clientWidth;//获取页面宽度
-					// 计算位置
-					var telEach = this.telCoords.split(",");
-					for (var i = 0; i < telEach.length; i++) {
-						telEach[i] = Math.round(parseInt(telEach[i]) * pageWidth / 374).toString();
+					this.telCoords = this.coordsCalculation(this.telCoords);
+					this.phoneCoords = this.coordsCalculation(this.phoneCoords);
+				},
+				// 计算坐标
+				coordsCalculation(coordsVal) {
+					var pageWidth = document.body.clientWidth; // 获取页面宽度
+					var each = coordsVal.split(",");
+					for (var i = 0; i < each.length; i++) {
+						each[i] = Math.round(parseInt(each[i]) * pageWidth / 374).toString();
 					}
-					var telNewPosition = "";
-					for (var i = 0; i < telEach.length; i++) {
-						telNewPosition += telEach[i];
-						if (i < telEach.length - 1) {
-							telNewPosition += ",";
+					var newPosition = "";
+					for (var i = 0; i < each.length; i++) {
+						newPosition += each[i];
+						if (i < each.length - 1) {
+							newPosition += ",";
 						}
 					}
-					this.telCoords = telNewPosition;
-					
-					var phoneEach = this.phoneCoords.split(",");
-					for (var i = 0; i < phoneEach.length; i++) {
-						phoneEach[i] = Math.round(parseInt(phoneEach[i]) * pageWidth / 374).toString();
-					}
-					var phoneNewPosition = "";
-					for (var i = 0; i < phoneEach.length; i++) {
-						phoneNewPosition += phoneEach[i];
-						if (i < phoneEach.length - 1) {
-							phoneNewPosition += ",";
-						}
-					}
-					this.phoneCoords = phoneNewPosition;
-				}
+					return newPosition;
+				},
 			}
 		})
 	</script>
