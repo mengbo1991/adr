@@ -16,7 +16,8 @@
 	</head>
 	<body>
 		<div id="app">
-			<img src="https://tiantaishan-adr-banner.oss-cn-hangzhou.aliyuncs.com/banner03.jpg" width="100%" alt="" usemap="#callMap" @load="coordsSet();" />
+			<img src="https://tiantaishan-adr-banner.oss-cn-hangzhou.aliyuncs.com/banner03.jpg" width="100%" alt=""
+				usemap="#callMap" @load="coordsSet();" />
 			<map name="callMap">
 				<area shape="rect" :coords="telCoords" @click="telCall">
 				<area shape="rect" :coords="phoneCoords" @click="phoneCall">
@@ -43,8 +44,8 @@
 					</el-radio-group>
 				</el-form-item>
 				<el-form-item label="药品名称" prop="productName">
-					<el-input v-model="formData.productName" placeholder="请输入药品名称" clearable
-						:style="{width: '100%'}"></el-input>
+					<el-input v-model="formData.productName" placeholder="请输入药品名称" clearable :style="{width: '100%'}">
+					</el-input>
 				</el-form-item>
 				<el-form-item label="药品批号" prop="batchNo">
 					<el-input v-model="formData.batchNo" placeholder="请输入药品批号" clearable :style="{width: '100%'}">
@@ -87,6 +88,8 @@
 			el: '#app',
 			data() {
 				return {
+					// 屏幕尺寸
+					screenWidth: null,
 					// 控制表单和最后提交成功的显示
 					elFormShow: true,
 					// 提交按钮
@@ -96,11 +99,11 @@
 					// 400电话
 					telVal: '4006008511',
 					// 初始电话坐标
-					telCoords: '66,100,171,118',
+					telCoords: '',
 					// 手机号
 					phoneVal: '13550382576',
 					// 初始手机坐标
-					phoneCoords: '46,122,160,141',
+					phoneCoords: '',
 					// API地址
 					apiUrl: 'http://39.98.129.8:8090/system/collect/add',
 					// 错误信息
@@ -217,15 +220,17 @@
 				},
 				// 坐标设置
 				coordsSet() {
-					this.telCoords = this.coordsCalculation(this.telCoords);
-					this.phoneCoords = this.coordsCalculation(this.phoneCoords);
+					if(this.screenWidth){
+						console.log(this.screenWidth)
+						this.telCoords = this.coordsCalculation('66,100,171,118');
+						this.phoneCoords = this.coordsCalculation('46,122,160,141');
+					}
 				},
 				// 计算坐标
 				coordsCalculation(coordsVal) {
-					var pageWidth = document.body.clientWidth; // 获取页面宽度
 					var each = coordsVal.split(",");
 					for (var i = 0; i < each.length; i++) {
-						each[i] = Math.round(parseInt(each[i]) * pageWidth / 374).toString();
+						each[i] = Math.round(parseInt(each[i]) * this.screenWidth / 374).toString();
 					}
 					var newPosition = "";
 					for (var i = 0; i < each.length; i++) {
@@ -235,6 +240,25 @@
 						}
 					}
 					return newPosition;
+				},
+			},
+			mounted() {
+				this.screenWidth = document.body.clientWidth
+				// 监控屏幕尺寸的变化
+				window.onresize = () => {
+					return (() => {
+						this.screenWidth = document.body.clientWidth
+					})()
+				}
+			},
+			watch: {
+				// 监控屏幕宽度数据
+				screenWidth: {
+					handler: function(val) {
+						this.coordsSet();
+					},
+					immediate: true,
+					deep: true
 				},
 			}
 		})
